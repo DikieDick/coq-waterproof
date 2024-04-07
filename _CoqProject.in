@@ -83,6 +83,8 @@ theories/Util/EnsureProp.v
 theories/Waterproof.v
 theories/Waterprove.v
 
+theories/Mathcomp/tactic.v
+
 # Coq-Waterproof libraries
 
 ## Analysis
