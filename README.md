@@ -46,6 +46,13 @@ $ dune build -p coq-waterproof
 $ dune install -p coq-waterproof
 ```
 
+## For Developers
+```bash
+autoreconf -i -s
+./configure
+```
+Then uncomment the lines in the `_CoqProject` file.
+
 ## Usage
 To use the tactics in a `.v` file, use the import:
 ```coq
