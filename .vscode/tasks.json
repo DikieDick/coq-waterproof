@@ -1,0 +1,57 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Update Configuration",
+            "type": "shell",
+            "command": "./update-conf.sh",
+            "group": "none",
+            "presentation": {
+                "reveal": "silent",
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+        },
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "./build.sh",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "dependsOn": "Update Configuration",
+            "problemMatcher": {
+                "owner": "waterproof-build",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": [
+                    {
+                        "regexp": "^File \"(.*)\", line (\\d*), characters (\\d*)-(\\d*):$",
+                        "file": 1,
+                        "line": 2,
+                        "endLine": 2,
+                        "endColumn": 4,
+                        "column": 3,
+                    }, {
+                        "regexp": "(Warning|Error): (.*)$",
+                        "severity": 1,
+                        "message": 2
+                    }
+                ]
+            }
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "make clean",
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+        }
+    ]
+}
