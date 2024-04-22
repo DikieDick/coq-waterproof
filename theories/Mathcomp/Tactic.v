@@ -2,44 +2,6 @@ From mathcomp Require Import ssreflect ssrbool eqtype all_algebra.
 (* FIXME: The import above 'all_algebra' is kinda big and slow, try to fix this! *)
 Import Num.Def Num.Theory.
 
-Lemma props__bools (T : eqType) (x y : T) : (x = y \/ x <> y) <-> (is_true (x == y) \/ is_true (x != y)).
-Proof.
-  split.
-
-  move=>H.
-  destruct H as [H1 | H2].
-  move/eqP in H1.
-  by left.
-  move/eqP in H2.
-  by right.
-
-  move=>H.
-  destruct H as [H1 | H2].
-  move/eqP in H1.
-  by left.
-  move/eqP in H2.
-  by right.
-Qed.
-
-Lemma props__bools2 (T : eqType) (x y : T) : (x <> y \/ x = y) <-> (is_true (x != y) \/ is_true (x == y)).
-Proof.
-  split.
-
-  move=>H.
-  destruct H as [H1 | H2].
-  move/eqP in H1.
-  by left.
-  move/eqP in H2.
-  by right.
-
-  move=>H.
-  destruct H as [H1 | H2].
-  move/eqP in H1.
-  by left.
-  move/eqP in H2.
-  by right.
-Qed.
-
 Lemma neq_sym (T : eqType) (x y : T) : x != y -> y != x.
 Proof. 
   intro H.
@@ -78,6 +40,10 @@ Ltac2 Notation "proof_disjunction_using" lemma(constr) := proof_disjunction_usin
 Ltac2 fail_if_open_goal () :=
   Control.enter (fun _ => fail).
 
+Ltac2 rewrite_props_bools () :=
+  ltac1:(rewrite [_ = _]bool_prop_equiv);
+  ltac1:(rewrite [_ <> _]bool_prop_equiv2).
+
 Ltac2 disjunction () :=
   Message.print(Message.of_string "disjunction");
   match! goal with
@@ -99,10 +65,10 @@ Ltac2 disjunction () :=
   | [|- is_true(?y == ?x) \/ is_true(?x != ?y) ] => proof_disjunction_using (eqVneq $x $y)
   | [|- is_true(?y != ?x) \/ is_true(?x == ?y) ] => proof_disjunction_using (eqVneq $x $y)
   (* prop prop *)
-  | [|- (?x = ?y) \/ (?x <> ?y) ] => rewrite props__bools; proof_disjunction_using (eqVneq $x $y)
-  | [|- (?x <> ?y) \/ (?x = ?y) ] => rewrite props__bools2; proof_disjunction_using (eqVneq $x $y)
-  | [|- (?y = ?x) \/ (?x <> ?y) ] => rewrite props__bools; proof_disjunction_using (eqVneq $x $y)
-  | [|- (?y <> ?x) \/ (?x = ?y) ] => rewrite props__bools2; proof_disjunction_using (eqVneq $x $y)
+  | [|- (?x = ?y) \/ (?x <> ?y) ] => rewrite_props_bools (); proof_disjunction_using (eqVneq $x $y)
+  | [|- (?x <> ?y) \/ (?x = ?y) ] => rewrite_props_bools (); proof_disjunction_using (eqVneq $x $y)
+  | [|- (?y = ?x) \/ (?x <> ?y) ] => rewrite_props_bools (); proof_disjunction_using (eqVneq $x $y)
+  | [|- (?y <> ?x) \/ (?x = ?y) ] => rewrite_props_bools (); proof_disjunction_using (eqVneq $x $y)
 
   (* --- /eqVneq --- *)
   (* --- real_leP --- *)
@@ -192,13 +158,15 @@ Proof.
 auto with wp_core wp_decidability_classical.
 Qed.
 
-(* This does not work *)
-Goal (y = x) \/ (~(x = y)).
+Goal (y = x) \/ (x <> y).
 Proof.
-match! goal with
-  | [|- ?a \/ ?b ] => Message.print(Message.of_constr a); Message.print(Message.of_constr (Constr.type a)); Message.print(Message.of_constr b); Message.print(Message.of_constr (Constr.type b))
-end.
-exclusion().
+auto with wp_core wp_decidability_classical.
+Qed.
+
+Goal (y <> x) \/ (x = y).
+Proof.
+auto with wp_core wp_decidability_classical.
+Qed.
 
 End tests. *)
 
