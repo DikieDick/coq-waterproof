@@ -67,9 +67,16 @@ From Ltac2 Require Import Ltac2.
 
 (* FIXME: This should get a different more fitting name *)
 Ltac2 proof_disjunction_using (lemma:constr) :=
+  Message.print(Message.of_string "proof_disjunction_using");
+  Message.print(Message.of_constr lemma);
   destruct $lemma; auto.
 
 Ltac2 Notation "proof_disjunction_using" lemma(constr) := proof_disjunction_using lemma.
+
+(* TODO: I don't think using this tactic works in the case that the goal 
+  includes the or statement as a subgoal, which is the case in the Either ... or ... usage *)
+Ltac2 fail_if_open_goal () :=
+  Control.enter (fun _ => fail).
 
 Ltac2 disjunction () :=
   Message.print(Message.of_string "disjunction");
@@ -101,12 +108,23 @@ Ltac2 disjunction () :=
   (* --- real_leP --- *)
   | [
     h1: is_true (@in_mem (Num.NumDomain.sort ?r) ?x (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r)))),
-    h2: is_true (@in_mem (Num.NumDomain.sort ?r) ?y (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r)))) |- _ ] => 
+    h2: is_true (@in_mem (Num.NumDomain.sort ?r) ?y (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r))))
+    |- _ ] => 
     let h1 := Control.hyp h1 in
     let h2 := Control.hyp h2 in
     proof_disjunction_using (real_leP $h1 $h2)
 
   (* --- /real_leP --- *)
+
+  (* --- real_ge0P --- *)
+  | [
+    h1: is_true (@in_mem (Num.NumDomain.sort ?r) ?x (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r))))
+    |- _ ] => let h1 := Control.hyp h1 in
+    first [
+      proof_disjunction_using (real_ge0P $h1); fail_if_open_goal ()
+      | proof_disjunction_using (real_le0P $h1); fail_if_open_goal ()
+    ]
+  (* --- /real_ge0P --- *)
 
   end.
 
@@ -114,7 +132,8 @@ Ltac2 disjunction3 () :=
   match! goal with
   | [
     h1: is_true (@in_mem (Num.NumDomain.sort ?r) ?x (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r)))),
-    h2: is_true (@in_mem (Num.NumDomain.sort ?r) ?y (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r)))) |- _ ] => 
+    h2: is_true (@in_mem (Num.NumDomain.sort ?r) ?y (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r))))
+    |- _ ] => 
     let h1 := Control.hyp h1 in
     let h2 := Control.hyp h2 in
     proof_disjunction_using (real_ltgtP $h1 $h2)
@@ -182,8 +201,8 @@ end.
 exclusion().
 
 End tests. *)
-(* 
-Section tests_r.
+
+(* Section tests_r.
 Parameter R : numDomainType.
 Parameter x y : R.
 Open Scope ring_scope.
@@ -201,5 +220,24 @@ Proof.
 intros.
 auto with wp_core wp_decidability_classical.
 Qed.
+
+Goal x \is Num.real -> y \is Num.real -> (x == y) \/ (x != y).
+Proof.
+intros.
+auto with wp_core wp_decidability_classical.
+Qed.
+
+Goal x \is Num.real -> (x < 0) \/ (x >= 0).
+Proof.
+intros.
+auto with wp_core wp_decidability_classical.
+Qed.
+
+Goal x \is Num.real -> (x <= 0) \/ (x > 0).
+Proof.
+intros.
+auto with wp_core wp_decidability_classical.
+Qed.
+
 
 End tests_r. *)
