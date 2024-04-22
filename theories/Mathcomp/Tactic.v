@@ -1,4 +1,6 @@
-From mathcomp Require Import ssreflect ssrbool eqtype.
+From mathcomp Require Import ssreflect ssrbool eqtype all_algebra.
+(* FIXME: The import above 'all_algebra' is kinda big and slow, try to fix this! *)
+Import Num.Def Num.Theory.
 
 Lemma props__bools (T : eqType) (x y : T) : (x = y \/ x <> y) <-> (is_true (x == y) \/ is_true (x != y)).
 Proof.
@@ -64,42 +66,69 @@ Qed.
 From Ltac2 Require Import Ltac2.
 
 (* FIXME: This should get a different more fitting name *)
-Ltac2 exclude_using (exclusion_lemma:constr) :=
-  destruct $exclusion_lemma; auto.
+Ltac2 proof_disjunction_using (lemma:constr) :=
+  destruct $lemma; auto.
 
-Ltac2 Notation "exclude_using" exclusion_lemma(constr) := exclude_using exclusion_lemma.
+Ltac2 Notation "proof_disjunction_using" lemma(constr) := proof_disjunction_using lemma.
 
-Ltac2 exclusion () :=
-  Message.print(Message.of_string "Using Exclusion");
+Ltac2 disjunction () :=
+  Message.print(Message.of_string "disjunction");
   match! goal with
+  (* --- eqVneq ---*)
+
   (* bool prop *)
-  | [|- is_true(?x == ?y) \/ (?x <> ?y) ] => exclude_using (eqVneq $x $y) 
-  | [|- is_true(?x != ?y) \/ (?x = ?y) ] => exclude_using (eqVneq $x $y)
-  | [|- is_true(?y == ?x) \/ (?x <> ?y) ] => exclude_using (eqVneq $x $y) 
-  | [|- is_true(?y != ?x) \/ (?x = ?y) ] => exclude_using (eqVneq $x $y)
+  | [|- is_true(?x == ?y) \/ (?x <> ?y) ] => proof_disjunction_using (eqVneq $x $y) 
+  | [|- is_true(?x != ?y) \/ (?x = ?y) ] => proof_disjunction_using (eqVneq $x $y)
+  | [|- is_true(?y == ?x) \/ (?x <> ?y) ] => proof_disjunction_using (eqVneq $x $y) 
+  | [|- is_true(?y != ?x) \/ (?x = ?y) ] => proof_disjunction_using (eqVneq $x $y)
   (* prop bool *)
-  | [|- (?x = ?y) \/ is_true(?x != ?y) ] => exclude_using (eqVneq $x $y)
-  | [|- (?x <> ?y) \/ is_true(?x == ?y) ] => exclude_using (eqVneq $x $y)
-  | [|- (?y = ?x) \/ is_true(?x != ?y) ] => exclude_using (eqVneq $x $y)
-  | [|- (?y <> ?x) \/ is_true(?x == ?y) ] => exclude_using (eqVneq $x $y)
+  | [|- (?x = ?y) \/ is_true(?x != ?y) ] => proof_disjunction_using (eqVneq $x $y)
+  | [|- (?x <> ?y) \/ is_true(?x == ?y) ] => proof_disjunction_using (eqVneq $x $y)
+  | [|- (?y = ?x) \/ is_true(?x != ?y) ] => proof_disjunction_using (eqVneq $x $y)
+  | [|- (?y <> ?x) \/ is_true(?x == ?y) ] => proof_disjunction_using (eqVneq $x $y)
   (* bool bool *)
-  | [|- is_true(?x == ?y) \/ is_true(?x != ?y) ] => exclude_using (eqVneq $x $y)
-  | [|- is_true(?x != ?y) \/ is_true(?x == ?y) ] => exclude_using (eqVneq $x $y)
-  | [|- is_true(?y == ?x) \/ is_true(?x != ?y) ] => exclude_using (eqVneq $x $y)
-  | [|- is_true(?y != ?x) \/ is_true(?x == ?y) ] => exclude_using (eqVneq $x $y)
+  | [|- is_true(?x == ?y) \/ is_true(?x != ?y) ] => proof_disjunction_using (eqVneq $x $y)
+  | [|- is_true(?x != ?y) \/ is_true(?x == ?y) ] => proof_disjunction_using (eqVneq $x $y)
+  | [|- is_true(?y == ?x) \/ is_true(?x != ?y) ] => proof_disjunction_using (eqVneq $x $y)
+  | [|- is_true(?y != ?x) \/ is_true(?x == ?y) ] => proof_disjunction_using (eqVneq $x $y)
   (* prop prop *)
-  | [|- (?x = ?y) \/ (?x <> ?y) ] => rewrite props__bools; exclude_using (eqVneq $x $y)
-  | [|- (?x <> ?y) \/ (?x = ?y) ] => rewrite props__bools2; exclude_using (eqVneq $x $y)
-  | [|- (?y = ?x) \/ (?x <> ?y) ] => rewrite props__bools; exclude_using (eqVneq $x $y)
-  | [|- (?y <> ?x) \/ (?x = ?y) ] => rewrite props__bools2; exclude_using (eqVneq $x $y)
+  | [|- (?x = ?y) \/ (?x <> ?y) ] => rewrite props__bools; proof_disjunction_using (eqVneq $x $y)
+  | [|- (?x <> ?y) \/ (?x = ?y) ] => rewrite props__bools2; proof_disjunction_using (eqVneq $x $y)
+  | [|- (?y = ?x) \/ (?x <> ?y) ] => rewrite props__bools; proof_disjunction_using (eqVneq $x $y)
+  | [|- (?y <> ?x) \/ (?x = ?y) ] => rewrite props__bools2; proof_disjunction_using (eqVneq $x $y)
+
+  (* --- /eqVneq --- *)
+  (* --- real_leP --- *)
+  | [
+    h1: is_true (@in_mem (Num.NumDomain.sort ?r) ?x (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r)))),
+    h2: is_true (@in_mem (Num.NumDomain.sort ?r) ?y (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r)))) |- _ ] => 
+    let h1 := Control.hyp h1 in
+    let h2 := Control.hyp h2 in
+    proof_disjunction_using (real_leP $h1 $h2)
+
+  (* --- /real_leP --- *)
+
+  end.
+
+Ltac2 disjunction3 () :=
+  match! goal with
+  | [
+    h1: is_true (@in_mem (Num.NumDomain.sort ?r) ?x (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r)))),
+    h2: is_true (@in_mem (Num.NumDomain.sort ?r) ?y (@mem (Num.NumDomain.sort ?r) (predPredType (Num.NumDomain.sort ?r)) (@has_quality O (Num.NumDomain.sort ?r) (@Rreal ?r)))) |- _ ] => 
+    let h1 := Control.hyp h1 in
+    let h2 := Control.hyp h2 in
+    proof_disjunction_using (real_ltgtP $h1 $h2)
   end.
 
 (* Add to the hint database *)
-#[export] Hint Extern 1 (_ \/ _) => ltac2:(exclusion ()) : wp_decidability_classical.
+#[export] Hint Extern 1 (_ \/ _) => ltac2:(disjunction ()) : wp_decidability_classical.
+#[export] Hint Extern 1 (_ \/ _ \/ _) => ltac2:(disjunction3 ()) : wp_decidability_classical.
 #[export] Hint Resolve eq_sym : wp_core.
 #[export] Hint Resolve neq_sym : wp_core.
 #[export] Hint Resolve bool_prop_equiv : wp_core.
 #[export] Hint Resolve bool_prop_equiv2 : wp_core.
+
+(* Set Printing All. *)
 
 (* Section tests.
 Parameter T : eqType.
@@ -153,3 +182,24 @@ end.
 exclusion().
 
 End tests. *)
+(* 
+Section tests_r.
+Parameter R : numDomainType.
+Parameter x y : R.
+Open Scope ring_scope.
+
+Goal x \is Num.real -> y \is Num.real -> (`| x - y | = y - x) \/ (`| x - y | = x - y).
+Proof.
+intros.
+Locate "\is".
+(* Set Printing All. *)
+auto with wp_core wp_decidability_classical.
+Qed.
+
+Goal x \is Num.real -> y \is Num.real -> (x == y) \/ (x < y) \/ (x > y).
+Proof.
+intros.
+auto with wp_core wp_decidability_classical.
+Qed.
+
+End tests_r. *)
