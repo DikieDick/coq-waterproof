@@ -68,4 +68,11 @@ Proof.
   We conclude that (x < 0 \/ x >= 0).
 Qed.
 
+Goal x \is Num.real -> y \is Num.real ->  x > y \/ x < y \/ x = y.
+Proof.
+  Assume that (x \is Num.real).
+  Assume that (y \is Num.real).
+  We conclude that (x > y \/ x < y \/ x = y).
+Qed.
+
 End R_tests.
