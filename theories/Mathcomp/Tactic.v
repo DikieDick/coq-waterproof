@@ -27,21 +27,20 @@ Qed.
 
 From Ltac2 Require Import Ltac2 Message.
 
-Ltac2 rewrite_props_bools () :=
-  ltac1:(rewrite [_ = _]bool_prop_equiv);
-  ltac1:(rewrite [_ <> _]bool_prop_equiv2).
-
 Ltac2 proof_disjunction_using (lemma: constr) :=
   print(of_string "We are here");
   print(of_constr lemma);
-  ltac1:(lemma |- case: lemma) (Ltac1.of_constr lemma); auto.
+  ltac1:(lemma |- case: lemma; try intro; try assumption) (Ltac1.of_constr lemma);
+  try (apply or_introl; apply is_true_true);
+  try (apply or_introl; assumption);
+  try (apply or_intror; apply is_true_true);
+  try (apply or_intror; assumption).
 
 Ltac2 proof_disjunction () :=
-  (* Rewrite if two props *)
-  match! goal with
-  | [|- context [_ <> _]] => rewrite_props_bools ()
-  | [|- _] => ()
-  end; 
+
+  try (ltac1:(rewrite [_ = _]bool_prop_equiv));
+  try (ltac1:(rewrite [_ <> _]bool_prop_equiv2));
+
   first [
     proof_disjunction_using constr:(@eqVneq)     |
     proof_disjunction_using constr:(@real_leP)   |
@@ -58,36 +57,31 @@ Ltac2 proof_disjunction () :=
 (* Goal forall T : eqType, forall x y : T, x = y \/ x != y.
 Proof.
   intros.
-  destruct (@eqVneq _ x y).
-
-Goal forall T : eqType, forall x y : T, x = y \/ x != y.
-Proof.
-  intros.
   auto with wp_decidability_classical.
 Qed.
 
 Goal forall T : eqType, forall x y : T, x != y \/ x = y.
 Proof.
   intros.
-  proof_disjunction ().
+  auto with wp_decidability_classical.
 Qed.
 
 Goal forall T : eqType, forall x y : T, x == y \/ x != y.
 Proof.
   intros.
-  proof_disjunction ().
+  auto with wp_decidability_classical.
 Qed.
 
 Goal forall T : eqType, forall x y : T, x = y \/ x <> y.
 Proof.
   intros.
-  proof_disjunction ().
+  auto with wp_decidability_classical.
 Qed.
 
 Goal forall T : eqType, forall x y : T, x <> y \/ x = y.
 Proof.
   intros.
-  proof_disjunction ().
+  auto with wp_decidability_classical.
 Qed.
 
 Section R_tests.
@@ -99,7 +93,7 @@ Parameters x y : R.
 Goal x \is Num.real -> y \is Num.real -> x <= y \/ x > y.
 Proof.
   intros.
-  proof_disjunction ().
+  auto with wp_decidability_classical.
 Qed.
 
 End R_tests. *)
