@@ -16,25 +16,24 @@
 (*                                                                            *)
 (******************************************************************************)
 
-From Ltac2 Require Import Ltac2.
-From Waterproof Require Import Waterproof. 
-From Waterproof Require Import Util.TypeForAssert.
+Require Import Util.Init.
+Require Import Util.MessagesToUser.
 
-Section assert_tests.
+From Ltac2 Require Import Ltac2 Message.
 
-Parameter setS : Set.
-Parameter s : setS.
+Local Ltac2 concat_list (ls : message list) : message :=
+  List.fold_right concat (of_string "") ls.
 
-Lemma test : 0 = 0.
-Proof.
-  (* Let binding gets rid of the output messages *)
-  let res := correct_type_for_assert constr:(0 = 0) in (). (* Prop *)
-  let res := correct_type_for_assert constr:(true) in (). (* bool -> gets converted to is_true true *)
-  let res := correct_type_for_assert constr:(true = true) in (). (* Prop *) 
-  let res := correct_type_for_assert constr:(setS) in ().
-  Fail Ltac2 Eval correct_type_for_assert constr:(0). (* Fail, as this is of type nat *)
-  (* Fail let test := correct_type_for_assert constr:(0) in ().  *)
-  Fail Ltac2 Eval correct_type_for_assert constr:(s). (* Fails as this term has type setS, which we do not recognise *)
-Abort.
-
-End assert_tests.
+(** Ensures that the type of [t] can be used in type matching or asserting. *)
+Ltac2 correct_type_by_wrapping (t: constr): constr :=
+  let type_t := Constr.type t in
+  match! type_t with
+    | Prop => t
+    | Set => t 
+    | Type => t
+    | bool => constr:(is_true $t)
+    | _ => throw (concat_list [
+      of_string "Expected a term with type in ['Prop', 'Set', 'Type', 'bool'], but we got a term of type '";
+      of_constr type_t; 
+      of_string "' instead."]); constr:(tt)
+  end.
