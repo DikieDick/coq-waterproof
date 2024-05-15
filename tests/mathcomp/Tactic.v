@@ -1,4 +1,4 @@
-From mathcomp Require Import eqtype ssrbool ssralg ssrnum.
+From mathcomp Require Import eqtype ssrbool ssralg ssrnum fintype.
 
 Import Num.Def Num.Theory.
 
@@ -13,7 +13,6 @@ Section eqtype_tests.
 
 Variable T : eqType.
 Variable x y : T.
-
 
 Goal x = y \/ x != y.
 Proof.
@@ -41,6 +40,18 @@ Proof.
 Qed.
 
 End eqtype_tests.
+
+Section derived_type_tests.
+
+Variable n : nat.
+Variable x y : 'I_n.
+
+Goal x = y \/ x != y.
+Proof.
+  We conclude that (x = y \/ x != y).
+Qed.
+
+End derived_type_tests.
 
 Section R_tests.
 Open Scope ring_scope.
